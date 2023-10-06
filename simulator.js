@@ -232,7 +232,7 @@ var OPTION_GON = function() {
 var OPTIONS = [OPTION_MULTI(), OPTION_STEM(), OPTION_DEBUG(), OPTION_GON()];
 
 
-for (i = 0; i < 200; i++) {
+for (i = 0; i < 100; i++) {
 	simulator.createRobot(
 		OPTION_STEM()
 	);
