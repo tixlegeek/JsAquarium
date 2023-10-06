@@ -1,4 +1,4 @@
-
+// Draw an arrow
 function canvas_arrow(context, fromx, fromy, tox, toy) {
   var headlen = 10; // length of head in pixels
   var dx = tox - fromx;
@@ -31,6 +31,7 @@ function RgbInterpolate(A, B, p){
   const b = (A.b * p + B.b * q)|0;
   return {r:r, g:g, b:b};
 }
+
 var palette_base = [
   "#888075",
   "#d81b60",
@@ -59,6 +60,7 @@ var CONSOLE = function(){
     this.div.innerHTML = this.text;
   }
 }
+
 var steps = 255/palette_base.length|0;
 var C = new CONSOLE();
 for(c =0; c< palette_base.length-1; c++){

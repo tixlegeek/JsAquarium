@@ -1,7 +1,9 @@
 var SHAPES = ["TRIANGLE", "SQUARE", "PENTAGON", "HEXAGON", "CIRCLE", "HEPTAGON", "OCTOGON"];
 var EDGESTYLES = ["RAINBOW", "SPARKLE", "DEFAULT"];
 
-
+/*
+	Simulation
+*/
 var SIMULATOR = function() {
 	this.canvas = document.createElement('CANVAS');
 	this.ctx = this.canvas.getContext('2d');
@@ -18,6 +20,7 @@ var SIMULATOR = function() {
 		force: 200
 	}
 	document.body.appendChild(this.canvas);
+	// Create an edge list
 	this.edges = new EDGES(this);
 	this.robots = [];
 	this.t = 0;
@@ -78,7 +81,9 @@ var SIMULATOR = function() {
 		}
 		this.clean();
 	}
-
+	/*
+		Makes robot kinda move toward a moving mouse.
+	*/
 	this.mousemove = (e) => {
 		var x = e.pageX;
 		var y = e.pageY;
@@ -108,12 +113,18 @@ addEventListener('mousemove', (e) => {
 	simulator.mousemove(e);
 });
 
+/*
+	Main loop
+*/
 var step = () => {
 	simulator.update();
 	requestAnimationFrame(step)
 };
 requestAnimationFrame(step)
 
+/*
+	Chose an option set and pass it to robot creation loop below
+*/
 var OPTION_MULTI = function() {
 	return {
 		x: Math.random() * simulator.canvas.width | 0,
@@ -231,7 +242,7 @@ var OPTION_GON = function() {
 }
 var OPTIONS = [OPTION_MULTI(), OPTION_STEM(), OPTION_DEBUG(), OPTION_GON()];
 
-
+// Create 100 robots.
 for (i = 0; i < 100; i++) {
 	simulator.createRobot(
 		OPTION_STEM()

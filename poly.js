@@ -1,3 +1,6 @@
+/*
+  Draw polygons 
+*/
 POLY = function(corners){
   this.corners = corners || 3;
   this.a = 2*Math.PI/corners;

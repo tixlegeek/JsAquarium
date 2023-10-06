@@ -1,15 +1,23 @@
 var robotIds = 0;
+/*
+Callbacks that gets called from sensors. Basically
+how the sensors works.
+*/
+
 var SENSOR_FUNC = {
 	BUMP: function() {
 
 		var collide = false;
+		// walls are triggering collisions.
 		if ((this.x <= 0) || (this.x >= this.sim.width) || (this.y <= 0) || (this.y >= this.sim.height)) {
 			return true;
 		}
 
 		for (n in this.robot.neighbors) {
 			var neighbor = this.robot.neighbors[n].n;
+			// Distance between the robot and its neighbors.
 			var d = Math.hypot((this.x - neighbor.x), (this.y - neighbor.y));
+			// Simple collision
 			if (d < (this.d + neighbor.d)) {
 				collide = true;
 			}
@@ -17,6 +25,10 @@ var SENSOR_FUNC = {
 		return collide;
 	}
 }
+
+/*
+	Sensors are things that can give feedback to the robots about the outer world.
+*/
 var SENSOR = function(sim, robot, args) {
 	this.sim = sim;
 	this.robot = robot;
@@ -49,60 +61,75 @@ var SENSOR = function(sim, robot, args) {
 	}
 	return this;
 }
+
+/*
+	The robots.
+*/
 var ROBOT = function(sim, args) {
 	this.sim = sim;
 	this.id = ++robotIds;
 	this.sex = (Math.random() * 10 > 5) ? "f" : "m";
 	this.d = args.d || 10;
-	this.x = args.x || 0;
-	this.y = args.y || 0;
-	this.dx = 0;
-	this.dy = 0;
-	this.a = args.a || 0;
-	this.na = 0;
-	this.v = args.v || 1;
+	this.x = args.x || 0;	// position
+	this.y = args.y || 0;	// position
+	this.dx = 0; // vector coordinates (?)
+	this.dy = 0; // vector coordinates (?)
+	this.a = args.a || 0;	// Angle
+	this.na = 0; // New angle
+	this.v = args.v || 1;	// Speed
 	this.color = args.color || 0;
 	this.rgb = {
 		r: 0,
 		g: 0,
 		b: 0
 	};
-	this.vision = args.vision || 40;
-	this.sensors = {};
-	this.neighbors = [];
+	this.vision = args.vision || 40; // Radius in which neighbors are considerred as potentially close. Do not compute collisions with robots outside this radius.
+	this.sensors = {}; // Array of sensors.
+	this.neighbors = [];	// Dynamic list of neighbors
 	this.hasNeighbors = false;
-	this.t = 0;
+	this.t = 0; // Inner counter
 	this.tail = [];
 	this.tailLength = args.tailSkipTrace || 10;
 	this.tailSkipTrace = args.tailSkipTrace || 5;
 	this.option = args.option || {
-		nominalGitter: 0.5,
-		showVision: false,
-		showEdges: false,
-		showTail: true,
-		robotShape: "CIRCLE",
-		showRobot: false,
-		fillRobot: false,
-		showSensors: false,
-		showInfos: false,
+		// Default configuration
+		nominalGitter: 0.5,	// Gitter
+		showVision: false, // Show the vision range
+		showEdges: false,	// Show edges between neighbors
+		showTail: true,	// Show the tail
+		robotShape: "CIRCLE",	// Shape of the robot
+		showRobot: false,	// Display the robot
+		fillRobot: false,	// Is the shape filled?
+		showSensors: false, // Display sensors
+		showInfos: false, // Displays text attached to the robot
 		edgeOptions: {
 
 		}
 	};
+
+	/*
+	Get the neighbors of the robot (inside the vision range)
+	*/
 	this.getNeighbors = () => {
 		var neighbors = [];
 		this.hasNeighbors = false;
+		// For each robots
 		for (n in this.sim.robots) {
 			neighbor = this.sim.robots[n];
+			// If we aren't this robot
 			if (neighbor.id != this.id) {
+				// First filter, do not make any complex computations for robots far away.
 				if ((Math.abs(this.x - neighbor.x) < (this.vision + this.d)) && (Math.abs(this.y - neighbor.y) < (this.vision + this.d)) && (neighbors.length < 5)) {
+					// Compute the true distance
 					var d = Math.hypot((this.x - neighbor.x), (this.y - neighbor.y)) - this.d
 					if (d <= (this.vision + this.d)) {
+						// Add the robot to the neighbor list
 						neighbors.push({
 							d: d,
 							n: neighbor,
 							i: ((this.vision + this.d)) / (this.vision + this.d)
 						});
+						// If we have to, we create an edge between the two robots.
 						if (this.option.showEdges)
 							this.sim.edges.add(this, neighbor, ((this.vision + this.d) - d) / (this.vision + this.d), this.option.edgeOptions || {});
 						this.hasNeighbors = true;
@@ -112,6 +139,7 @@ var ROBOT = function(sim, args) {
 		}
 		return neighbors;
 	}
+
 	this.createSensor = (name, args) => {
 		var s = new SENSOR(this.sim, this, args);
 		this.sensors[name] = s;
@@ -244,21 +272,27 @@ var ROBOT = function(sim, args) {
 		if (this.hasNeighbors) {
 
 		}
+
+		// Basic collision behaviour
 		if ((this.sensors["left"].activated == true) && (this.sensors["left"].activated == true)) {
-			this.a += Math.PI;
+			this.a += Math.PI; // Full turn
 		} else if (this.sensors["left"].activated == true) {
-			this.a += 1 + Math.random() * 0.050 - 0.025;
+			this.a += 1 + Math.random() * 0.050 - 0.025; // Deviate the angle to the other direction
 		} else if (this.sensors["right"].activated == true) {
-			this.a -= 1 + Math.random() * 0.050 - 0.025;
+			this.a -= 1 + Math.random() * 0.050 - 0.025; // Deviate the angle to the other direction
 		}
+		// Gitter
 		this.a += Math.random() * this.option.nominalGitter - (this.option.nominalGitter / 2);
 
+		// Update vector coordinates.
 		this.dx = Math.sin(this.a);
 		this.dy = Math.cos(this.a);
 
+		// Displacement of the robot
 		var vdx = (this.dx * this.v);
 		var vdy = (this.dy * this.v);
 
+		// Move only inside the screen.
 		if (((this.x + vdx) <= this.sim.width) && ((this.x + vdx) > 0))
 			this.x += vdx;
 		else
@@ -269,6 +303,7 @@ var ROBOT = function(sim, args) {
 			this.y -= vdy;
 		this.traceTail();
 	}
+
 	this.createSensor("right", {
 		a: 0.8,
 		d: 0,

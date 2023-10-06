@@ -1,3 +1,6 @@
+/*
+	Everything related to edges.
+*/
 var EDGE = function(A, B, intensity, option) {
 	this.A = A;
 	this.B = B;
@@ -60,7 +63,7 @@ var EDGES = function(sim) {
 	}
 
 	this.add = (A, B, intensity, options) => {
-
+		// Only add if another similar edge is found.
 		var exists = this.list.find(e => ((e.A.id == A.id && e.B.id == B.id) || (e.A.id == B.id && e.B.id == A.id)));
 		if (!exists)
 			this.list.push(new EDGE(A, B, intensity, options));
